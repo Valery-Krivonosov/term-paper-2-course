@@ -1,0 +1,107 @@
+
+# --- Результаты компиляции ---
+*.o
+*.obj
+*.exe
+*.out
+*.app
+# --- Библиотеки ---
+*.a
+*.lib
+*.so
+*.so.*
+*.dll
+*.dylib
+# --- Отладочная информация ---
+*.pdb
+*.idb
+*.ilk
+# --- Папки сборки ---
+build/
+Debug/
+Release/
+x64/
+out/
+# --- Служебные файлы IDE ---
+.vs/
+.vscode/
+.idea/
+*.user
+# --- CMake ---
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# --- Java: скомпилированные классы ---
+*.class
+
+# --- Java: пакеты (архивы) ---
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# --- Java: логи и дампы ---
+hs_err_pid*
+replay_pid*
+*.log
+
+# --- Maven ---
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Gradle ---
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# --- Gradle Wrapper (по желанию, обычно коммитят) ---
+# gradle/wrapper/gradle-wrapper.jar
+
+# --- IntelliJ IDEA ---
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# --- Eclipse ---
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# --- NetBeans ---
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# --- VS Code (Java) ---
+.vscode/
+
+# --- JVM / прочее ---
+*.hprof
+*.jfr
