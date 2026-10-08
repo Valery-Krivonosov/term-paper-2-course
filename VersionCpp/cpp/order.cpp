@@ -4,10 +4,10 @@
 
 namespace logistics
 {
-	Order::Order(std::uint64_t id, bool urgent, const Cargo& cargo)
+	Order::Order(std::uint64_t id, bool urgent, double weightKg, std::string_view destination)
 		: m_id{ id }
 		, m_urgent{ urgent }
-		, m_cargo{ cargo }
+		, m_cargo{ weightKg, destination }
 	{
 	}
 

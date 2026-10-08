@@ -32,13 +32,14 @@ namespace logistics
 		Driver* m_driver{ nullptr };
 
 	public:
+		Order(std::uint64_t id, bool urgent, double weightKg, std::string_view destination);
+		~Order();
+
 		Order()												= delete;
 		Order(Order&&)										= delete;
 		Order(const Order&)									= delete;
 		Order& operator=(Order&&)							= delete;
 		Order& operator=(const Order&)						= delete;
-		Order(std::uint64_t id, bool urgent, const Cargo& cargo);
-		~Order();
 
 		[[nodiscard]] std::uint64_t GetId() const
 		{
