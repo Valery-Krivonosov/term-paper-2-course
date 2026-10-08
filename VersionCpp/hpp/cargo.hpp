@@ -16,11 +16,11 @@ namespace logistics
 		std::string m_destination{};
 
 	public:
-		Cargo()							= delete;
-		Cargo(Cargo&&)					= delete;
-		Cargo(const Cargo&)				= delete;
-		Cargo& operator=(Cargo&&)		= delete;
-		Cargo& operator=(const Cargo&)  = delete;
+		Cargo()							= default;
+		Cargo(Cargo&&)					= default;
+		Cargo(const Cargo&)				= default;
+		Cargo& operator=(Cargo&&)		= default;
+		Cargo& operator=(const Cargo&)  = default;
 		Cargo(double weightKg, std::string_view destination);
 		~Cargo();
 

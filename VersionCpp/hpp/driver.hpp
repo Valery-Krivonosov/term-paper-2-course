@@ -26,11 +26,11 @@ namespace logistics
 		State m_state{ State::eAvailable };
 
 	public:
-		Driver()								= default;
-		Driver(const Driver&)					= default;
-		Driver(Driver&&)						= default;
-		Driver& operator=(const Driver&)		= default;
-		Driver& operator=(Driver&&)				= default;
+		Driver()								= delete;
+		Driver(const Driver&)					= delete;
+		Driver(Driver&&)						= delete;
+		Driver& operator=(const Driver&)		= delete;
+		Driver& operator=(Driver&&)				= delete;
 		Driver(std::uint64_t id, std::string_view fullName);
 		~Driver();
 
