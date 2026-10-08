@@ -18,14 +18,14 @@ namespace logistics
 			eAssigned = 1,
 			eInTransist = 2,
 			eDelivered = 3,
-			eCanceled = 4,
+			eCancelled = 4,
 		};
 
 	private:
 		static constexpr auto TAG = "order";
 
 		std::uint64_t m_id{ 0 };
-		bool m_urget{ false };
+		bool m_urgent{ false };
 		State m_state{ State::eCreated };
 
 		Cargo m_cargo{};
@@ -47,7 +47,7 @@ namespace logistics
 
 		[[nodiscard]] State GetState() const
 		{
-			return State m_state;
+			return m_state;
 		}
 
 		[[nodiscard]] Driver* GetDriver() const

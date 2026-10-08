@@ -6,7 +6,7 @@ namespace logistics
 {
 	Order::Order(std::uint64_t id, bool urgent, const Cargo& cargo)
 		: m_id{ id }
-		, m_urget{ urgent }
+		, m_urgent{ urgent }
 		, m_cargo{ cargo }
 	{
 	}
@@ -25,7 +25,7 @@ namespace logistics
 			case State::eAssigned:		return "назначен";
 			case State::eInTransist:	return "в пути";
 			case State::eDelivered:		return "доставлен";
-			case: State::eCanceled :	return "отменен";
+			case State::eCancelled:		return "отменен";
 			default:					return "не известно";
 		}
 	}
@@ -60,7 +60,7 @@ namespace logistics
 				<< " освободил водителя '" << m_driver->GetFullName() << "'\n";
 		m_driver = nullptr;
 
-		if (m_state == State::eAssigned || m_state == State::eInTransit)
+		if (m_state == State::eAssigned || m_state == State::eInTransist)
 		{
 			m_state = State::eCreated;
 		}
@@ -82,7 +82,7 @@ namespace logistics
 			return false;
 		}
 
-		if (m_driver != nullptr && m_driver != &m_driver)
+		if (m_driver != nullptr && m_driver != &driver)
 		{
 			ReleaseDriver();
 		}
@@ -105,7 +105,7 @@ namespace logistics
 			return false;
 		}
 
-		if (m_state == State::eCanceled)
+		if (m_state == State::eCancelled)
 		{
 			std::cout << "[Order] отказ: заказ id=" << m_id
 					<< " уже отменён\n";
