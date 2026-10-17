@@ -37,9 +37,9 @@ namespace logistics
 			<< ", состояние=" << StateToStr(m_state) << "\n";
 
 		m_cargo.Print();
-		if (m_driver != nullptr)
+		if (auto driver = m_driver.lock())
 		{
-			m_driver->Print();
+			driver->Print();
 		}
 		else
 		{
@@ -49,16 +49,14 @@ namespace logistics
 
 	void Order::ReleaseDriver()
 	{
-		if(m_driver == nullptr)
+		if(auto driver = m_driver.lock())
 		{
-			return;
+			driver->FinishTrip();
+			std::cout << "[Order] заказ id=" << m_id
+				<< " освободил водителя '" << driver->GetFullName() << "'\n";
 		}
 
-		m_driver->FinishTrip();
-
-		std::cout << "[Order] заказ id=" << m_id
-				<< " освободил водителя '" << m_driver->GetFullName() << "'\n";
-		m_driver = nullptr;
+		m_driver.reset();
 
 		if (m_state == State::eAssigned || m_state == State::eInTransist)
 		{
@@ -66,33 +64,42 @@ namespace logistics
 		}
 	}
 
-	bool Order::AssignDriver(Driver& driver)
+	bool Order::AssignDriver(const std::shared_ptr<Driver>& driver)
 	{
-		if (driver.GetState() == Driver::State::eResting)
+		if (!driver)
 		{
-			std::cout << "[Order] отказ: водитель '" << driver.GetFullName()
+			std::cout << "[Order] отказ: передан пустой указатель на водителя\n";
+			return false;
+		}
+
+		if (driver->GetState() == Driver::State::eResting)
+		{
+			std::cout << "[Order] отказ: водитель '" << driver->GetFullName()
 					<< "' отдыхает, нельзя назначить на заказ id=" << m_id << "\n";
 			return false;
 		}
 
-		if (driver.GetState() == Driver::State::eOnTrip)
+		if (driver->GetState() == Driver::State::eOnTrip)
 		{
-			std::cout << "[Order] отказ: водитель '" << driver.GetFullName()
+			std::cout << "[Order] отказ: водитель '" << driver->GetFullName()
 					<< "' уже занят другим заказом\n";
 			return false;
 		}
 
-		if (m_driver != nullptr && m_driver != &driver)
+		if (auto old = m_driver.lock())
 		{
-			ReleaseDriver();
+			if (old != driver)
+			{
+				ReleaseDriver();
+			}
 		}
 
-		m_driver = &driver;
-		driver.SetState(Driver::State::eOnTrip);
+		m_driver = driver;
+		driver->SetState(Driver::State::eOnTrip);
 		m_state = State::eAssigned;
 
 		std::cout << "[Order] заказ id=" << m_id
-				<< " назначен на водителя '" << driver.GetFullName() << "'\n";
+				<< " назначен на водителя '" << driver->GetFullName() << "'\n";
 		return true;
 	}
 
@@ -112,26 +119,28 @@ namespace logistics
 			return false;
 		}
 	
-		if (m_driver != nullptr)
+		if (auto driver = m_driver.lock())
 		{
-			m_driver->FinishTrip();
+			driver->FinishTrip();
 			std::cout << "[Order] заказ id=" << m_id
-					<< " отменён, водитель '" << m_driver->GetFullName()
+					<< " отменён, водитель '" << driver->GetFullName()
 					<< "' освобождён\n";
-			m_driver = nullptr;
 		}
 		else
 		{
 			std::cout << "[Order] заказ id=" << m_id << " отменён\n";
 		}
 
+		m_driver.reset();
 		m_state = State::eCancelled;
 		return true;
 	}
 
 	bool Order::StartTransit()
 	{
-		if (m_driver == nullptr || m_state != State::eAssigned)
+		auto driver = m_driver.lock();
+
+		if (!driver || m_state != State::eAssigned)
 		{
 			std::cout << "[Order] отказ: заказ id=" << m_id
 					<< " не может перейти 'в пути' без назначенного водителя\n";
@@ -155,15 +164,16 @@ namespace logistics
 
 		m_state = State::eDelivered;
 
-		if (m_driver != nullptr)
+		if (auto driver = m_driver.lock())
 		{
-			m_driver->FinishTrip();
+			driver->FinishTrip();
 			std::cout << "[Order] заказ id=" << m_id
-					<< " доставлен, водитель '" << m_driver->GetFullName()
+					<< " доставлен, водитель '" << driver->GetFullName()
 					<< "' освобождён\n";
-			m_driver = nullptr;
 		}
-		
+
+		m_driver.reset();
+
 		return true;
 	}
 }
