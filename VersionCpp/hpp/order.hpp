@@ -1,10 +1,11 @@
 #pragma once
-
+	
 #include "driver.hpp"
 #include "cargo.hpp"
 
 #include <cstdint>
 #include <string_view>
+#include <memory>
 
 
 namespace logistics
@@ -29,7 +30,7 @@ namespace logistics
 		State m_state{ State::eCreated };
 
 		Cargo m_cargo{};
-		Driver* m_driver{ nullptr };
+		std::weak_ptr<Driver> m_driver;
 
 	public:
 		Order(std::uint64_t id, bool urgent, double weightKg, std::string_view destination);
@@ -51,9 +52,9 @@ namespace logistics
 			return m_state;
 		}
 
-		[[nodiscard]] Driver* GetDriver() const
+		[[nodiscard]] std::shared_ptr<Driver> GetDriver() const
 		{
-			return m_driver;
+			return m_driver.lock();
 		}
 
 		[[nodiscard]] const Cargo& GetCargo() const
@@ -72,7 +73,7 @@ namespace logistics
 
 		bool Cancel();
 
-		bool AssignDriver(Driver& driver);
+		bool AssignDriver(const std::shared_ptr<Driver>&driver);
 
 		bool StartTransit();
 
