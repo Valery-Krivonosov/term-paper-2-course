@@ -29,6 +29,7 @@ namespace logistics
 		static std::uint64_t s_lightCounter;
 		static std::uint64_t s_heavyCounter;
 		std::uint64_t m_id{ 0 };
+		std::shared_ptr<std::string> m_docs;
 
 		static std::uint64_t GenerateId(double capacity);
 
@@ -67,6 +68,16 @@ namespace logistics
 		[[nodiscard]] std::uint64_t GetId() const
 		{
 			return m_id;
+		}
+
+		[[nodiscard]] std::string GetDocs() const
+		{
+			return *m_docs;
+		}
+
+		void SetDocs(std::string_view docs)
+		{
+			*m_docs = docs;
 		}
 
 		void SetState(State state)
