@@ -21,6 +21,8 @@ namespace logistics
 	protected:
 		std::string m_plateNumber{};
 		double m_capacity{ 0 };
+        int m_year{ 2020 };
+
 
 		[[nodiscard]] std::string Header() const;
 	
@@ -34,7 +36,7 @@ namespace logistics
 		static std::uint64_t GenerateId(double capacity);
 
 	public:
-		BaseVehicle(std::string_view plateNumber, double capacity);
+		BaseVehicle(std::string_view plateNumber, double capacity, int year);
 		BaseVehicle(const BaseVehicle& other);
 		BaseVehicle& operator=(const BaseVehicle& other);
 		BaseVehicle(BaseVehicle&& other) noexcept;
@@ -63,6 +65,11 @@ namespace logistics
 		[[nodiscard]] double GetCapacity() const
 		{
 			return m_capacity;
+		}
+
+		[[nodiscard]] int GetYear() const
+		{
+			return m_year;
 		}
 
 		[[nodiscard]] std::uint64_t GetId() const

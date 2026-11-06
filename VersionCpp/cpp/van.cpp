@@ -6,8 +6,7 @@
 namespace logistics
 {
     Van::Van(std::string_view plateNumber, double capacity, int year, double volume)
-        : BaseVehicle{ plateNumber, capacity }
-        , m_year{ year }
+        : BaseVehicle{ plateNumber, capacity, year }
         , m_volume{ volume }
     {
         std::cout << "[Van] constructor: " << GetType() << " id=" << GetId() << "\n";
@@ -15,7 +14,6 @@ namespace logistics
 
     Van::Van(const Van& other)
         : BaseVehicle{ other }
-        , m_year{ other.m_year }
         , m_volume{ other.m_volume }
     {
         std::cout << "[Van] copy constructor: id=" << GetId() << "\n";
@@ -26,7 +24,6 @@ namespace logistics
         if (this != &other)
         {
             BaseVehicle::operator=(other);
-            m_year = other.m_year;
             m_volume = other.m_volume;
         }
         return *this;
@@ -34,10 +31,8 @@ namespace logistics
 
     Van::Van(Van&& other) noexcept
         : BaseVehicle{ std::move(other) }
-        , m_year{ other.m_year }
         , m_volume{ other.m_volume }
     {
-        other.m_year = 0;
         other.m_volume = 0.0;
         std::cout << "[Van] move constructor: id=" << GetId() << "\n";
     }
@@ -47,9 +42,7 @@ namespace logistics
         if (this != &other)
         {
             BaseVehicle::operator=(std::move(other));
-            m_year = other.m_year;
             m_volume = other.m_volume;
-            other.m_year = 0;
             other.m_volume = 0.0;
         }
         return *this;
@@ -72,10 +65,7 @@ namespace logistics
             return false;
         }
 
-        bool yearOk = (m_year >= 2015);
-        bool volumeOk = (m_volume > 5.5);
-
-        return yearOk && volumeOk;
+        return (m_year >= 2015) && (m_year >= 2015);
     }
 
     std::string Van::Describe() const

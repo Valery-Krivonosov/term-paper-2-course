@@ -9,7 +9,6 @@ namespace logistics
     {
     private:
         int m_axles{ 0 };
-        int m_year{ 2020 };
 
     public:
         Truck(std::string_view plateNumber, double capacity, int axles, int year);

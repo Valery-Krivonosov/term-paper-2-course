@@ -6,9 +6,8 @@
 namespace logistics
 {
     Truck::Truck(std::string_view plateNumber, double capacity, int axles, int year)
-        : BaseVehicle{ plateNumber, capacity }
+        : BaseVehicle{ plateNumber, capacity, year }
         , m_axles{ axles }
-        , m_year{ year }
     {
         std::cout << "[Truck] constructor: " << GetType() << " id=" << GetId() << "\n";
     }
@@ -16,7 +15,6 @@ namespace logistics
     Truck::Truck(const Truck& other)
         : BaseVehicle{ other }
         , m_axles{ other.m_axles }
-        , m_year{ other.m_year }
     {
         std::cout << "[Truck] copy constructor: id=" << GetId() << "\n";
     }
@@ -27,7 +25,6 @@ namespace logistics
         {
             BaseVehicle::operator=(other);
             m_axles = other.m_axles;
-            m_year = other.m_year;
         }
         return *this;
     }
@@ -35,10 +32,8 @@ namespace logistics
     Truck::Truck(Truck&& other) noexcept
         : BaseVehicle{ std::move(other) }
         , m_axles{ other.m_axles }
-        , m_year{ other.m_year }
     {
         other.m_axles = 0;
-        other.m_year = 0;
         std::cout << "[Truck] move constructor: id=" << GetId() << "\n";
     }
 
@@ -48,9 +43,7 @@ namespace logistics
         {
             BaseVehicle::operator=(std::move(other));
             m_axles = other.m_axles;
-            m_year = other.m_year;
             other.m_axles = 0;
-            other.m_year = 0;
         }
         return *this;
     }
@@ -72,17 +65,12 @@ namespace logistics
             return false;
         }
 
-        bool yearOk = (m_year >= 2015);
-        bool axlesOk = (m_axles >= 3);
-
-        return yearOk && axlesOk;
+        return (m_year >= 2015) && (m_axles >= 3);
     }
 
     std::string Truck::Describe() const
     {
-        return BaseVehicle::Describe() +
-            ", Осей: " + std::to_string(m_axles) +
-            ", Год: " + std::to_string(m_year);
+        return BaseVehicle::Describe() + ", Осей: " + std::to_string(m_axles);
     }
 
     std::unique_ptr<BaseVehicle> Truck::Clone() const

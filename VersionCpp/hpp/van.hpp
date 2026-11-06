@@ -8,7 +8,6 @@ namespace logistics
     class Van final : public BaseVehicle
     {
     private:
-        int m_year{ 2020 };
         double m_volume{ 0.0 };
 
     public:

@@ -17,9 +17,10 @@ namespace logistics
 		return ++s_lightCounter;
 	}
 
-	BaseVehicle::BaseVehicle(std::string_view plateNumber, double capacity)
+	BaseVehicle::BaseVehicle(std::string_view plateNumber, double capacity, int year)
 		: m_plateNumber{ plateNumber }
 		, m_capacity{ capacity }
+		, m_year{ year }
 		, m_id{ GenerateId(m_capacity) }
 		, m_docs{ std::make_shared<std::string>("Пусто") }
 	{
@@ -30,6 +31,7 @@ namespace logistics
 		: m_state{ other.m_state }
 		, m_plateNumber{ other.m_plateNumber }
 		, m_capacity{ other.m_capacity }
+		, m_year{ other.m_year }
 		, m_id{ other.m_id }
 		, m_docs{ std::make_shared<std::string>(*other.m_docs)}
 	{
@@ -43,6 +45,7 @@ namespace logistics
 			m_state = other.m_state;
 			m_plateNumber = other.m_plateNumber;
 			m_capacity = other.m_capacity;
+			m_year = other.m_year;
 			m_id = other.m_id;
 			m_docs = std::make_shared<std::string>(*other.m_docs);
 		}
@@ -50,9 +53,10 @@ namespace logistics
 	}
 
 	BaseVehicle::BaseVehicle(BaseVehicle&& other) noexcept
-		: m_state {other.m_state }
+		: m_state{other.m_state }
 		, m_plateNumber{ std::move(other.m_plateNumber) }
 		, m_capacity{ other.m_capacity }
+		, m_year{ other.m_year }
 		, m_id{ other.m_id }
 		, m_docs{ std::move(other.m_docs) }
 	{
@@ -67,6 +71,7 @@ namespace logistics
 			m_state = other.m_state;
 			m_plateNumber = std::move(other.m_plateNumber);
 			m_capacity = other.m_capacity;
+			m_year = other.m_year;
 			m_id = other.m_id;
 			m_docs = std::move(other.m_docs);
 			other.m_id = 0;
@@ -95,6 +100,7 @@ namespace logistics
 		return "ID: " + std::to_string(m_id) +
 			", Госномер: " + m_plateNumber +
 			", Тоннаж: " + std::to_string(m_capacity) + "т" +
+			", Год: " + std::to_string(m_year) +
 			", Состояние: " +  stateStr;
 	}
 
