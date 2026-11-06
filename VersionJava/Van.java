@@ -1,17 +1,14 @@
 public final class Van extends BaseVehicle {
-    private int year;
     private double volume;
 
     public Van(String plateNumber, double capacity, int year, double volume) {
-        super(plateNumber, capacity);
-        this.year = year;
+        super(plateNumber, capacity, year);
         this.volume = volume;
         System.out.println("[Van] constructor: " + getType() + " id=" + getId());
     }
 
     public Van(Van other) {
         super(other);
-        this.year = other.year;
         this.volume = other.volume;
         System.out.println("[Van] copy constructor: id=" + getId());
     }

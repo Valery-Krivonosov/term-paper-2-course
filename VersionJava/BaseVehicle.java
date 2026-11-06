@@ -14,11 +14,13 @@ public abstract class BaseVehicle {
 
     protected String plateNumber;
     protected double capacity;
+    protected int year;
 
 
-    public BaseVehicle(String plateNumber, double capacity) {
+    public BaseVehicle(String plateNumber, double capacity, int year) {
         this.plateNumber = plateNumber;
         this.capacity = capacity;
+        this.year = year;
         this.id = generateId(capacity);
         this.state = State.AVAILABLE;
         this.docs = "Пусто";
@@ -28,6 +30,7 @@ public abstract class BaseVehicle {
     public BaseVehicle(BaseVehicle other) {
         this.plateNumber = other.plateNumber;
         this.capacity = other.capacity;
+        this.year = other.year;
         this.id = other.id;
         this.state = other.state;
         this.docs = other.docs; 
@@ -48,7 +51,8 @@ public abstract class BaseVehicle {
             case IN_REPAIR -> "В ремонте";
         };
         return "ID: " + id + ", Госномер: " + plateNumber +
-               ", Тоннаж: " + capacity + "т, Состояние: " + stateStr;
+               ", Тоннаж: " + capacity + "т, Год: " + year +
+                ", Состояние: " + stateStr;
     }
 
     public abstract String getType();
@@ -71,6 +75,10 @@ public abstract class BaseVehicle {
         return capacity; 
     }
     
+    public int getYear() {
+        return year;
+    }
+
     public State getState() { 
         return state; 
     }

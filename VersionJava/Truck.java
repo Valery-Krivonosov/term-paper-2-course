@@ -1,18 +1,15 @@
 public class Truck extends BaseVehicle {
     private int axles;
-    private int year;
 
     public Truck(String plateNumber, double capacity, int axles, int year) {
-        super(plateNumber, capacity);
+        super(plateNumber, capacity, year);
         this.axles = axles;
-        this.year = year;
         System.out.println("[Truck] constructor: " + getType() + " id=" + getId());
     }
 
     public Truck(Truck other) {
         super(other);
         this.axles = other.axles;
-        this.year = other.year;
         System.out.println("[Truck] copy constructor: id=" + getId());
     }
 
