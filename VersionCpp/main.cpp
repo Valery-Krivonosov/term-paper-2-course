@@ -1,111 +1,94 @@
-#include "hpp/cargo.hpp"
-#include "hpp/driver.hpp"
-#include "hpp/order.hpp"
+#include "hpp/truck.hpp"
+#include "hpp/van.hpp"
 
 #include <iostream>
 #include <memory>
+#include <string>
+
 
 using namespace logistics;
 
 int main() {
-    std::cout << "========= 1. Композиция: Order владеет Cargo =========\n";
-    {
-        Order order{ 1, true, 1500.0, "Барнаул" };
-        order.Print();
+    constexpr int N = 4;
 
-        std::cout << "  Вес груза через заказ: "
-            << order.GetCargo().GetWeightKg() << " кг\n";
-    } 
+    std::cout << "==================== 1. Создание объектов ====================\n";
+    auto truck1 = std::make_unique<Truck>("А111АА", 10.0, 4, 2022);
+    auto truck2 = std::make_unique<Truck>("Б222ББ", 7.0, 2, 2020);
 
-    std::cout << "\n========= 2. Агрегация: weak_ptr на внешний Driver =========\n";
-    auto sharedDriver = std::make_shared<Driver>(101, "Иванов И. И.");
+    auto van1 = std::make_unique<Van>("В333ВВ", 3.0, 2023, 12.5);
+    auto van2 = std::make_unique<Van>("Г444ГГ", 1.5, 2010, 8.0);
 
-    {
-        Order order{ 2, true, 800.0, "Бийск" };
-        order.AssignDriver(sharedDriver);
-        order.StartTransit();
-        order.Deliver();
-    }
+    truck1->SetState(BaseVehicle::State::eInRepair);
 
-    std::cout << "\n--- После уничтожения Order водитель жив: ---\n";
-    sharedDriver->Print();
+    std::cout << "\n==================== 2. Массив базовых классов ====================\n";
+    std::unique_ptr<BaseVehicle> fleet[N];
+    fleet[0] = std::move(truck1);
+    fleet[1] = std::move(truck2);
+    fleet[2] = std::move(van1);
+    fleet[3] = std::move(van2);
 
+    for (int i = 0; i < N; ++i) {
+        std::cout << "--- " << fleet[i]->GetType() << " ---\n";
+        std::string desc = fleet[i]->Describe();
+        std::cout << desc << "\n";
 
-    std::cout << "\n========= 3. Проверка правила =========\n";
-    auto restingDriver = std::make_shared<Driver>(102, "Петров П. П.");
-    restingDriver->GoToRest();
-
-    Order order3{ 3, false, 500.0, "Омск" };
-    order3.AssignDriver(restingDriver);  
-    order3.Print();
-
-    std::cout << "\n========= 4. unique_ptr: уничтожение и передача владения =========\n";
-    {
-        auto heapOrder = std::make_unique<Order>(4, true, 200.0, "Томск");
-        heapOrder->Print();
-
-        std::unique_ptr<Order> movedOrder = std::move(heapOrder);
-        if (!heapOrder)
-        {
-            std::cout << "  heapOrder пуст после std::move\n";
+        std::cout << "  [Анализ строки] ";
+        size_t pos = desc.find("Госномер: ");
+        if (pos != std::string::npos) {
+            std::string plate = desc.substr(pos + 18, 9);
+            std::cout << "найден номер: '" << plate << "'\n";
         }
-        movedOrder->Print();
-    }
-
-    std::cout << "\n========= 5. shared_ptr: use_count() растёт и уменьшается =========\n";
-    auto first = std::make_shared<Driver>(201, "Сидоров С. С.");
-    std::cout << "количество активных shared_ptr владеющих объектом: " << first.use_count() << "\n";
-
-    {
-        auto second = first;
-        std::cout << "  количество активных shared_ptr владеющих объектом после копирования: " 
-                << first.use_count() << "\n";
-    }
-
-    std::cout << "  количество активных shared_ptr владеющих объектом после выхода из блока: " 
-            << first.use_count() << "\n";
-
-    first.reset();
-
-
-    std::cout << "\n========= 6. weak_ptr: до и после уничтожения =========\n";
-    std::weak_ptr<Driver> weak;
-    std::shared_ptr<Driver> owner;
-    
-    {
-        owner = std::make_shared<Driver>(301, "Долгоживущий Д. Д.");
-        weak = owner;
-
-        if (auto alive = weak.lock())
-        {
-            alive->Print();
+        else {
+            std::cout << "номер не найден\n";
         }
+
+        std::cout << "Результат ТО: " << (fleet[i]->PassInspection() ? "ПРОЙДЕН" : "НЕ ПРОЙДЕН") << "\n\n";
     }
 
-    owner.reset();
+    std::cout << "==================== 3. Клонирование ====================\n";
+    std::unique_ptr<BaseVehicle> clonedVan = fleet[2]->Clone();
+    std::cout << "Оригинал: " << fleet[2]->Describe() << "\n";
+    std::cout << "Клон:     " << clonedVan->Describe() << "\n\n";
 
-    if (auto alive = weak.lock())
-    {
-        std::cout << "не должно выполниться объект ещё жив\n";
-    }
-    else
-    {
-        std::cout << "объект уничтожен, weak.lock() вернул пустой указатель\n";
-    }
-    
-    std::cout << "\n========= 7. массив объектов и массив умных указателей =========\n";
-    {
-        Cargo cargos[2] = { Cargo{ 10.0, "А" }, Cargo{ 20.0, "Б" } };
-        for (const auto& c : cargos) c.Print();
-    }
+    std::cout << "==================== 4. Поверхностное и глубокое копирование ====================\n";
 
-    {
-        std::unique_ptr<Driver> drivers[2];
-        drivers[0] = std::make_unique<Driver>(201, "А. А.");
-        drivers[1] = std::make_unique<Driver>(202, "Б. Б.");
+    std::cout << "1. ГЛУБОКОЕ КОПИРОВАНИЕ:\n";
+    auto originalTruck = std::make_unique<Truck>("Т777ТТ", 8.0, 3, 2021);
+    originalTruck->SetDocs("Лист №1");
 
-        for (const auto& d : drivers) d->Print();
+    Truck deepCopy = *originalTruck;
+
+    std::cout << "Оригинал: " << originalTruck->GetDocs() << "\n";
+    std::cout << "Копия: " << deepCopy.GetDocs() << "\n";
+
+    deepCopy.SetDocs("Лист №2");
+
+    std::cout << "После изменения копии:\n";
+    std::cout << "Оригинал: " << originalTruck->GetDocs() << "\n";
+    std::cout << "Копия: " << deepCopy.GetDocs() << "\n\n";
+
+    std::cout << "2. ПОВЕРХНОСТНОЕ КОПИРОВАНИЕ:\n";
+    auto sharedTruck = std::make_shared<Truck>("П888ПП", 5.0, 2, 2020);
+    sharedTruck->SetDocs("Лист №3");
+
+    std::shared_ptr<Truck> shallowCopy = sharedTruck;
+
+    std::cout << "Оригинал: " << sharedTruck->GetDocs() << "\n";
+    std::cout << "Копия: " << shallowCopy->GetDocs() << "\n";
+
+    shallowCopy->SetDocs("Лист №4");
+
+    std::cout << "После изменения копии:\n";
+    std::cout << "Оригинал: " << sharedTruck->GetDocs() << "\n";
+    std::cout << "Копия: " << shallowCopy->GetDocs() << "\n\n";
+
+    std::cout << "==================== 5. Очистка ====================\n";
+    for (int i = 0; i < N; ++i) {
+        fleet[i].reset();
     }
+    clonedVan.reset();
+    originalTruck.reset();
+    sharedTruck.reset();
 
     return 0;
 }
