@@ -1,71 +1,80 @@
-import java.lang.ref.WeakReference;
-
 public class Main {
 
     public static void main(String[] args) {
+        System.out.println("==================== 1. Создание объектов ====================");
+        Truck truck1 = new Truck("A111AA", 10.0, 4, 2022);
+        Truck truck2 = new Truck("B222BB", 7.0, 2, 2020);
+        Van van1 = new Van("C333CC", 3.0, 2023, 12.5);
+        Van van2 = new Van("D444DD", 1.5, 2010, 8.0);
 
-        System.out.println("\n==================== 1. Композиция ====================");
-        {
-            Order order = new Order(1, true, 1500.0, "Барнаул");
-            System.out.println(order);
-            System.out.println("  Вес груза через заказ: "
-                        + order.getCargo().getWeightKg() + " кг");
+        truck1.setState(BaseVehicle.State.IN_REPAIR);
+
+        System.out.println("\n==================== 2. Массив базовых классов ====================");
+        BaseVehicle[] fleet = new BaseVehicle[4];
+        fleet[0] = truck1;
+        fleet[1] = truck2;
+        fleet[2] = van1;
+        fleet[3] = van2;
+
+        for (BaseVehicle vehicle : fleet) {
+            System.out.println("--- " + vehicle.getType() + " ---");
+            String desc = vehicle.describe();
+            System.out.println(desc);
+
+            int pos = desc.indexOf("Госномер: ");
+            if (pos != -1) {
+                int start = pos + 10;
+                int end = desc.indexOf(',', start);
+                if (end != -1) {
+                    String plate = desc.substring(start, end).trim();
+                    System.out.println("[Анализ строки] найден номер: '" + plate + "'");
+                }
+            }
+
+            System.out.println("Результат ТО: " + 
+                (vehicle.passInspection() ? "ПРОЙДЕН" : "НЕ ПРОЙДЕН") + "\n");
         }
 
-        System.out.println("\n==================== 2. Агрегация ====================");
-        Driver sharedDriver = new Driver(101, "Иванов И. И.");
-        {
-            Order order = new Order(2, true, 800.0, "Бийск");
-            order.assignDriver(sharedDriver);
-            order.startTransit();
-            order.deliver();
-        }
-        System.out.println("\n-- после уничтожения Order водитель жив --");
-        System.out.println(sharedDriver);
+        System.out.println("==================== 3. Клонирование ====================");
+        BaseVehicle clonedVan = fleet[2].cloneVehicle();
+        System.out.println("Оригинал: " + fleet[2].describe());
+        System.out.println("Клон: " + clonedVan.describe() + "\n");
 
-        System.out.println("\n========== 3. Проверка правила: отдыхающий водитель ==========");
-        Driver resting = new Driver(102, "Петров П. П.");
-        resting.goToRest();
+        System.out.println("==================== 4. Копирование ====================");
+        System.out.println("1. ГЛУБОКОЕ КОПИРОВАНИЕ:");
+        Truck originalTruck = new Truck("T777TT", 8.0, 3, 2021);
+        originalTruck.setDocs("Лист №1");
 
-        Order order3 = new Order(3, false, 500.0, "Омск");
-        order3.assignDriver(resting);
-        System.out.println(order3);
+        Truck deepCopy = new Truck(originalTruck); 
 
-        System.out.println("\n==================== 4. Ссылки и копии  ====================");
-        Driver first  = new Driver(201, "Сидоров С. С.");
-        Driver second = first;
-        System.out.println("  first  до изменения: " + first);
-        System.out.println("  second до изменения: " + second);
+        System.out.println("Оригинал: " + originalTruck.getDocs());
+        System.out.println("Копия: " + deepCopy.getDocs());
 
-        second.setState(Driver.State.RESTING);
-        System.out.println("\n  меняем состояние водителя через вторую ссылку: ");
-        System.out.println("  first  = " + first);
-        System.out.println("  second = " + second);
-        System.out.println(" обе ссылки ведут на один и тот же объект? " + (first == second));
+        deepCopy.setDocs("Лист №2");
 
-        System.out.println("\n==================== 5. Освобождение ресурса ====================");
-        IssueLog outsideLog;
-        try (IssueLog log = new IssueLog("Второй журнал")) {
-            outsideLog = log;
-            log.write("какая-то запись");
-        }
-        System.out.println("\n-- после try пытаемся писать в закрытый журнал --");
-        outsideLog.write("эта запись не должна пройти");
+        System.out.println("После изменения копии:");
+        System.out.println("Оригинал: " + originalTruck.getDocs());
+        System.out.println("Копия: " + deepCopy.getDocs() + "\n");
 
-        System.out.println("\n==================== 6. Сборщик мусора ====================");
-        Driver temp = new Driver(301, "Временный Т. Т.");
-        WeakReference<Driver> watcher = new WeakReference<>(temp);
+        System.out.println("2. ПОВЕРХНОСТНОЕ КОПИРОВАНИЕ:");
+        Truck sharedTruck = new Truck("P888PP", 6.0, 2, 2020);
+        sharedTruck.setDocs("Лист №3");
 
-        System.out.println("  до обнуления ссылки: объект жив? "
-                        + (watcher.get() != null));
+        Truck shallowCopy = sharedTruck; 
 
-        temp = null;
-        System.gc();
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) { }
+        System.out.println("Оригинал: " + sharedTruck.getDocs());
+        System.out.println("Копия: " + shallowCopy.getDocs());
 
-        System.out.println(" после сборщика мусора объект жив? "
-                        + (watcher.get() != null));
+        shallowCopy.setDocs("Лист №4");
+
+        System.out.println("После изменения копии:");
+        System.out.println("Оригинал: " + sharedTruck.getDocs());
+        System.out.println("Копия: " + shallowCopy.getDocs() + "\n");
+
+        System.out.println("==================== 5. equals() и hashCode() ====================");
+        Truck t1 = new Truck("X999XX", 6.0, 3, 2020);
+        Truck t2 = new Truck("X999XX", 6.0, 4, 2022);
+        System.out.println("t1 и t2 одна и та же машина? " + t1.equals(t2));
+        System.out.println("у t1 и t2 одинаковый хеш? " + (t1.hashCode() == t2.hashCode()));
     }
 }
