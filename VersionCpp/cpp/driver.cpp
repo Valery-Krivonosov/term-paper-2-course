@@ -1,4 +1,5 @@
 #include "../hpp/driver.hpp"
+#include "../hpp/exceptions.hpp"
 
 #include <iostream>
 
@@ -42,9 +43,7 @@ namespace logistics
 	{
 		if (m_state == State::eOnTrip)
 		{
-			std::cout << "[Driver] ошибка: водитель '" << m_fullName 
-					  << "' в рейсе, нельзя уйти на отдых\n";
-			return;
+			throw DriverUnavailable{ m_fullName };
 		}
 
 		m_state = State::eResting;
