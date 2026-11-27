@@ -1,80 +1,137 @@
+import logistics.Assignable;
+import logistics.cargo.Cargo;
+import logistics.driver.Driver;
+import logistics.order.Order;
+import logistics.policy.StandardCargoPolicy;
+import logistics.policy.UrgentCargoPolicy;
+import logistics.vehicle.*;
+import logistics.exception.*;
+
+import java.util.Arrays;
+
+
 public class Main {
-
     public static void main(String[] args) {
-        System.out.println("==================== 1. Создание объектов ====================");
-        Truck truck1 = new Truck("A111AA", 10.0, 4, 2022);
-        Truck truck2 = new Truck("B222BB", 7.0, 2, 2020);
-        Van van1 = new Van("C333CC", 3.0, 2023, 12.5);
-        Van van2 = new Van("D444DD", 1.5, 2010, 8.0);
+        System.out.println("\n================== 1. Раннее и позднее связывание ==================");
+        BaseVehicle v = new Truck("A123BC", 10.0, 4, 2020, new StandardCargoPolicy());
+        System.out.println("getKind() (позднее, все методы виртуальны): " + v.getKind());
+        System.out.println("getFixedKind() (раннее, final-метод): " + v.getFixedKind());
 
-        truck1.setState(BaseVehicle.State.IN_REPAIR);
+        System.out.println("\n================== 2. Демонстрация instanceof  ==================");
+        BaseVehicle[] fleet = {
+            new Truck("B456CD", 8.0, 3, 2021, new StandardCargoPolicy()),
+            new Van("D222BB", 3.0, 2023, 12.0),
+            new Van("F777FF", 1.0, 2022, 5.0),
+            new RepairVehicle("R001RP", 5.0, 2010)
+        };
 
-        System.out.println("\n==================== 2. Массив базовых классов ====================");
-        BaseVehicle[] fleet = new BaseVehicle[4];
-        fleet[0] = truck1;
-        fleet[1] = truck2;
-        fleet[2] = van1;
-        fleet[3] = van2;
-
-        for (BaseVehicle vehicle : fleet) {
-            System.out.println("--- " + vehicle.getType() + " ---");
-            String desc = vehicle.describe();
-            System.out.println(desc);
-
-            int pos = desc.indexOf("Госномер: ");
-            if (pos != -1) {
-                int start = pos + 10;
-                int end = desc.indexOf(',', start);
-                if (end != -1) {
-                    String plate = desc.substring(start, end).trim();
-                    System.out.println("[Анализ строки] найден номер: '" + plate + "'");
+        Cargo cargo = new Cargo(2000.0, "Тверь");
+        for (BaseVehicle f : fleet) {
+            if (f instanceof Assignable a) {
+                if (!tryAssign(a, cargo, 42)) {
+                    System.out.println(f.getType() + " не подходит по грузоподъёмности");
                 }
+            } else {
+                System.out.println(f.getType() + " нельзя назначить на рейс");
             }
-
-            System.out.println("Результат ТО: " + 
-                (vehicle.passInspection() ? "ПРОЙДЕН" : "НЕ ПРОЙДЕН") + "\n");
         }
 
-        System.out.println("==================== 3. Клонирование ====================");
-        BaseVehicle clonedVan = fleet[2].cloneVehicle();
-        System.out.println("Оригинал: " + fleet[2].describe());
-        System.out.println("Клон: " + clonedVan.describe() + "\n");
+        System.out.println("\n================== 3. Конфигурирование (смена правила) ==================");
+        Truck t = new Truck("E333EE", 5.0, 3, 2021, new StandardCargoPolicy());
+        Order heavy = new Order(12, true, 5500.0, "Сочи");
 
-        System.out.println("==================== 4. Копирование ====================");
-        System.out.println("1. ГЛУБОКОЕ КОПИРОВАНИЕ:");
-        Truck originalTruck = new Truck("T777TT", 8.0, 3, 2021);
-        originalTruck.setDocs("Лист №1");
+        System.out.println("обычное правило: canTake = " + t.canTake(heavy.getCargo()));
+        t.setPolicy(new UrgentCargoPolicy());
+        System.out.println("срочное правило: canTake = " + t.canTake(heavy.getCargo()));
 
-        Truck deepCopy = new Truck(originalTruck); 
+        System.out.println("\n================== 4. Исключения: успешное действие ==================");
+        Driver driver = new Driver(1, "Иванов");
+        try {
+            heavy.assignDriver(driver);
+            heavy.startTransit();
+            heavy.deliver();
+            System.out.println("заказ 12 успешно доставлен");
+        } catch (DriverUnavailableException e) {
+            System.out.println("водитель: " + e.getMessage());
+        } catch (InvalidOrderStateException e) {
+            System.out.println("состояние: " + e.getMessage());
+        } catch (LogisticsException e) {
+            System.out.println("ошибка: " + e.getMessage());
+        }
 
-        System.out.println("Оригинал: " + originalTruck.getDocs());
-        System.out.println("Копия: " + deepCopy.getDocs());
+        System.out.println("\n================== 5. Исключения: нарушение правил ==================");
 
-        deepCopy.setDocs("Лист №2");
+        try {
+            heavy.deliver();
+        } catch (InvalidOrderStateException e) {
+            System.out.println("перехвачено: " + e.getMessage());
+        } catch (LogisticsException e) {
+            System.out.println("ошибка: " + e.getMessage());
+        }
 
-        System.out.println("После изменения копии:");
-        System.out.println("Оригинал: " + originalTruck.getDocs());
-        System.out.println("Копия: " + deepCopy.getDocs() + "\n");
+        try {
+            Truck t2 = new Truck("G555GG", 5.0, 3, 2021, new StandardCargoPolicy());
+            if (!t2.canTake(heavy.getCargo())) {
+                throw new OverLoadException(heavy.getCargo().getWeightKg(), t2.getCapacity());
+            }
+        } catch (OverLoadException e) {
+            System.out.println("перехвачено: " + e.getMessage());
+        } catch (LogisticsException e) {
+            System.out.println("ошибка: " + e.getMessage());
+        }
 
-        System.out.println("2. ПОВЕРХНОСТНОЕ КОПИРОВАНИЕ:");
-        Truck sharedTruck = new Truck("P888PP", 6.0, 2, 2020);
-        sharedTruck.setDocs("Лист №3");
+        try {
+            Cargo bad = new Cargo(100.0, "Омск");
+            bad.setWeightKg(-5.0);
+        } catch (NegativeWeightException e) {
+            System.out.println("перехвачено: " + e.getMessage());
+        } catch (LogisticsException e) {
+            System.out.println("ошибка: " + e.getMessage());
+        }
 
-        Truck shallowCopy = sharedTruck; 
+        try {
+            Driver resting = new Driver(2, "Петров");
+            resting.setState(Driver.State.ON_TRIP);
+            resting.goToRest();
+        } catch (DriverUnavailableException e) {
+            System.out.println("перехвачено: " + e.getMessage());
+        } catch (LogisticsException e) {
+            System.out.println("ошибка: " + e.getMessage());
+        }
 
-        System.out.println("Оригинал: " + sharedTruck.getDocs());
-        System.out.println("Копия: " + shallowCopy.getDocs());
+        try {
+            if (fleet[0] instanceof Assignable a) {
+                a.assignTo(43);
+            }
+        } catch (NoAvailableVehicleException e) {
+            System.out.println("перехвачено: " + e.getMessage());
+        } catch (LogisticsException e) {
+            System.out.println("ошибка: " + e.getMessage());
+        }
 
-        shallowCopy.setDocs("Лист №4");
+        System.out.println("\n================== 6. Comparable: сортировка по госномеру ==================");
+        Arrays.sort(fleet);
+        for (BaseVehicle f : fleet) {
+            System.out.println("  " + f.getType() + " " + f.getPlateNumber());
+        }
 
-        System.out.println("После изменения копии:");
-        System.out.println("Оригинал: " + sharedTruck.getDocs());
-        System.out.println("Копия: " + shallowCopy.getDocs() + "\n");
+        System.out.println("\n================== 7. try-with-resources: журнал ==================");
+        try (IssueLog log = new IssueLog("журнал лаба5")) {
+            log.write("рейс завершён");
+            log.write("заказ 12 доставлен");
+        }
 
-        System.out.println("==================== 5. equals() и hashCode() ====================");
-        Truck t1 = new Truck("X999XX", 6.0, 3, 2020);
-        Truck t2 = new Truck("X999XX", 6.0, 4, 2022);
-        System.out.println("t1 и t2 одна и та же машина? " + t1.equals(t2));
-        System.out.println("у t1 и t2 одинаковый хеш? " + (t1.hashCode() == t2.hashCode()));
+    }
+
+    private static boolean tryAssign(Assignable item, Cargo cargo, long orderId) {
+        if (!item.isAvailable()) {
+            return false;
+        }
+        if (!item.canTake(cargo)) {
+            return false;
+        }
+        
+        item.assignTo(orderId);
+        return true;
     }
 }
