@@ -1,5 +1,11 @@
 #include "hpp/truck.hpp"
 #include "hpp/van.hpp"
+#include "hpp/repairvehicle.hpp"
+#include "hpp/cargopolicy.hpp"
+#include "hpp/driver.hpp"
+#include "hpp/order.hpp"
+#include "hpp/iassignable.hpp"
+#include "hpp/exceptions.hpp"
 
 #include <iostream>
 #include <memory>
@@ -9,86 +15,102 @@
 using namespace logistics;
 
 int main() {
-    constexpr int N = 4;
+    std::cout << "\n================== 1. Раннее и позднее связывание ==================\n";
+    std::unique_ptr<BaseVehicle> v = std::make_unique<Truck>("A123BC", 10.0, 4, 2020, std::make_unique<StandardCargoPolicy>());
+    std::cout << "GetKind()  (невирт., раннее): " << v->GetKind() << "\n";
+    std::cout << "Describe() (вирт., позднее):  " << v->Describe() << "\n";
 
-    std::cout << "==================== 1. Создание объектов ====================\n";
-    auto truck1 = std::make_unique<Truck>("А111АА", 10.0, 4, 2022);
-    auto truck2 = std::make_unique<Truck>("Б222ББ", 7.0, 2, 2020);
+    std::cout << "\n================== 2. Проверка типа во время выполнения ==================\n";
+    std::unique_ptr<BaseVehicle> fleet[3] = {
+        std::make_unique<Truck>("B456CD", 8.0, 3, 2021, std::make_unique<StandardCargoPolicy>()),
+        std::make_unique<Van>("D222BB", 3.0, 2023, 12.0),
+        std::make_unique<RepairVehicle>("R001RP", 5.0, 2010)
+    };
 
-    auto van1 = std::make_unique<Van>("В333ВВ", 3.0, 2023, 12.5);
-    auto van2 = std::make_unique<Van>("Г444ГГ", 1.5, 2010, 8.0);
-
-    truck1->SetState(BaseVehicle::State::eInRepair);
-
-    std::cout << "\n==================== 2. Массив базовых классов ====================\n";
-    std::unique_ptr<BaseVehicle> fleet[N];
-    fleet[0] = std::move(truck1);
-    fleet[1] = std::move(truck2);
-    fleet[2] = std::move(van1);
-    fleet[3] = std::move(van2);
-
-    for (int i = 0; i < N; ++i) {
-        std::cout << "--- " << fleet[i]->GetType() << " ---\n";
-        std::string desc = fleet[i]->Describe();
-        std::cout << desc << "\n";
-
-        std::cout << "  [Анализ строки] ";
-        size_t pos = desc.find("Госномер: ");
-        if (pos != std::string::npos) {
-            std::string plate = desc.substr(pos + 18, 9);
-            std::cout << "найден номер: '" << plate << "'\n";
+    Cargo cargo{ 2000.0, "Тверь" };
+    for (auto& f : fleet)
+    {
+        if (auto* a = dynamic_cast<IAssignable*>(f.get()))
+        {
+            if (!TryAssign(*a, cargo, 42))
+            {
+                std::cout << f->GetType() << " не подходит по грузоподъёмности\n";
+            }
         }
-        else {
-            std::cout << "номер не найден\n";
+        else
+        {
+            std::cout << f->GetType() << " нельзя назначить на рейс\n";
         }
-
-        std::cout << "Результат ТО: " << (fleet[i]->PassInspection() ? "ПРОЙДЕН" : "НЕ ПРОЙДЕН") << "\n\n";
     }
 
-    std::cout << "==================== 3. Клонирование ====================\n";
-    std::unique_ptr<BaseVehicle> clonedVan = fleet[2]->Clone();
-    std::cout << "Оригинал: " << fleet[2]->Describe() << "\n";
-    std::cout << "Клон:     " << clonedVan->Describe() << "\n\n";
+    std::cout << "\n================== 3. Конфигурирование ==================\n";
+    auto t = std::make_unique<Truck>("E333EE", 5.0, 3, 2021, std::make_unique<StandardCargoPolicy>());
+    Order heavy{ 12, true, 5500.0, "Сочи" };
 
-    std::cout << "==================== 4. Поверхностное и глубокое копирование ====================\n";
+    std::cout << "обычное правило: CanTake = " << t->CanTake(heavy.GetCargo()) << "\n";
+    t->SetPolicy(std::make_unique<UrgentCargoPolicy>());
+    std::cout << "срочное правило: CanTake = " << t->CanTake(heavy.GetCargo()) << "\n";
 
-    std::cout << "1. ГЛУБОКОЕ КОПИРОВАНИЕ:\n";
-    auto originalTruck = std::make_unique<Truck>("Т777ТТ", 8.0, 3, 2021);
-    originalTruck->SetDocs("Лист №1");
-
-    Truck deepCopy = *originalTruck;
-
-    std::cout << "Оригинал: " << originalTruck->GetDocs() << "\n";
-    std::cout << "Копия: " << deepCopy.GetDocs() << "\n";
-
-    deepCopy.SetDocs("Лист №2");
-
-    std::cout << "После изменения копии:\n";
-    std::cout << "Оригинал: " << originalTruck->GetDocs() << "\n";
-    std::cout << "Копия: " << deepCopy.GetDocs() << "\n\n";
-
-    std::cout << "2. ПОВЕРХНОСТНОЕ КОПИРОВАНИЕ:\n";
-    auto sharedTruck = std::make_shared<Truck>("П888ПП", 5.0, 2, 2020);
-    sharedTruck->SetDocs("Лист №3");
-
-    std::shared_ptr<Truck> shallowCopy = sharedTruck;
-
-    std::cout << "Оригинал: " << sharedTruck->GetDocs() << "\n";
-    std::cout << "Копия: " << shallowCopy->GetDocs() << "\n";
-
-    shallowCopy->SetDocs("Лист №4");
-
-    std::cout << "После изменения копии:\n";
-    std::cout << "Оригинал: " << sharedTruck->GetDocs() << "\n";
-    std::cout << "Копия: " << shallowCopy->GetDocs() << "\n\n";
-
-    std::cout << "==================== 5. Очистка ====================\n";
-    for (int i = 0; i < N; ++i) {
-        fleet[i].reset();
+    std::cout << "\n========= 4. Исключения (успешное действие) =========\n";
+    auto driver = std::make_shared<Driver>(1, "Иванов");
+    try
+    {
+        heavy.AssignDriver(driver);
+        heavy.StartTransit();
+        heavy.Deliver();
+        std::cout << "заказ 12 успешно доставлен\n";
     }
-    clonedVan.reset();
-    originalTruck.reset();
-    sharedTruck.reset();
+    catch (const DriverUnavailable& e) { std::cout << "водитель: " << e.what() << "\n"; }
+    catch (const InvalidOrderState& e) { std::cout << "состояние: " << e.what() << "\n"; }
+    catch (const std::exception& e) { std::cout << "ошибка: " << e.what() << "\n"; }
+
+    std::cout << "\n================== 5. Исключения (нарушение правил) ==================\n";
+
+    try
+    {
+        heavy.Deliver();
+    }
+    catch (const InvalidOrderState& e) { std::cout << "перехвачено: " << e.what() << "\n"; }
+    catch (const std::exception& e) { std::cout << "ошибка: " << e.what() << "\n"; }
+
+    auto t1 = std::make_unique<Truck>("G555GG", 5.0, 3, 2026, std::make_unique<StandardCargoPolicy>());
+    try
+    {
+        if (!t1->CanTake(heavy.GetCargo()))
+        {
+            throw OverloadError{ heavy.GetCargo().GetWeightKg(), t1->GetCapacity() };
+        }
+    }
+    catch (const OverloadError& e) { std::cout << "перехвачено: " << e.what() << "\n"; }
+    catch (const std::exception& e) { std::cout << "ошибка: " << e.what() << "\n"; }
+
+    try
+    {
+        Cargo bad{ 100.0, "Омск" };
+        bad.SetWeightKg(-5.0);
+    }
+    catch (const NegativeWeight& e) { std::cout << "перехвачено: " << e.what() << "\n"; }
+    catch (const std::exception& e) { std::cout << "ошибка: " << e.what() << "\n"; }
+
+    try
+    {
+        auto resting = std::make_shared<Driver>(2, "Петров");
+        resting->SetState(Driver::State::eOnTrip);
+        resting->GoToRest();
+    }
+    catch (const DriverUnavailable& e) { std::cout << "перехвачено: " << e.what() << "\n"; }
+    catch (const std::exception& e) { std::cout << "ошибка: " << e.what() << "\n"; }
+
+    try
+    {
+        auto* busy = dynamic_cast<IAssignable*>(fleet[0].get());
+        if (busy != nullptr && !busy->IsAvailable())
+        {
+            throw NoAvailableVehicle{ cargo.GetDestination() };
+        }
+    }
+    catch (const NoAvailableVehicle& e) { std::cout << "перехвачено: " << e.what() << "\n"; }
+    catch (const std::exception& e) { std::cout << "ошибка: " << e.what() << "\n"; }
 
     return 0;
 }
