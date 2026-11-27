@@ -1,6 +1,9 @@
+package logistics.vehicle;
+
 import java.util.Objects;
 
-public abstract class BaseVehicle {
+
+public abstract class BaseVehicle implements Comparable<BaseVehicle>{
     public enum State {
         AVAILABLE, ON_TRIP, IN_REPAIR
     }
@@ -106,5 +109,18 @@ public abstract class BaseVehicle {
     @Override
     public int hashCode() {
         return Objects.hash(plateNumber);
+    }
+
+    public String getKind() {
+        return "единица транспорта";
+    }
+
+    public final String getFixedKind() {
+        return "единица транспорта";
+    }
+
+    @Override
+    public int compareTo(BaseVehicle other) {
+        return this.plateNumber.compareTo(other.plateNumber);
     }
 }

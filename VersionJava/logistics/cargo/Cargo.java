@@ -1,3 +1,8 @@
+package logistics.cargo;
+
+import logistics.exception.NegativeWeightException;
+
+
 public class Cargo {
     private double weightKg;
     private final String destination;
@@ -17,8 +22,7 @@ public class Cargo {
 
     public void setWeightKg(double weightKg){
         if (weightKg < 0){
-            System.out.println("[Cargo] ошибка: вес не может быть отрицательным");
-            return;
+            throw new NegativeWeightException(weightKg);
         }
         this.weightKg = weightKg;
     }

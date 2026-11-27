@@ -1,4 +1,11 @@
-public final class Van extends BaseVehicle {
+package logistics.vehicle;
+
+import logistics.Assignable;
+import logistics.cargo.Cargo;
+import logistics.exception.NoAvailableVehicleException;
+
+
+public final class Van extends BaseVehicle implements Assignable {
     private double volume;
 
     public Van(String plateNumber, double capacity, int year, double volume) {
@@ -36,5 +43,36 @@ public final class Van extends BaseVehicle {
     @Override
     public BaseVehicle cloneVehicle() {
         return new Van(this);
+    }
+
+    @Override 
+    public String getKind() {
+        return "фургон";
+    }
+
+    @Override
+    public boolean canTake(Cargo cargo) {
+        return getState() == State.AVAILABLE
+            && cargo.getWeightKg() <= getCapacity() * 1000.0;
+    }
+
+    @Override
+    public void assignTo(long orderId) {
+        if (getState() != State.AVAILABLE) {
+            throw new NoAvailableVehicleException("фургон " + getPlateNumber() + " занят");
+        }
+        
+        setState(State.ON_TRIP);
+        System.out.println("[Van] " + getPlateNumber() + " назначен на заказ id=" + orderId);
+    }
+
+    @Override 
+    public void completeTrip() { 
+        setState(State.AVAILABLE); 
+    }
+    
+    @Override 
+    public boolean isAvailable() { 
+        return getState() == State.AVAILABLE; 
     }
 }
