@@ -79,7 +79,7 @@ namespace logistics
 		return *this;
 	}
 
-	BaseVehicle::~BaseVehicle()
+	BaseVehicle::~BaseVehicle() noexcept
 	{
 		std::cout << "[BaseVehicle] destructor: id=" << m_id << "\n";
 	}

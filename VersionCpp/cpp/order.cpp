@@ -1,4 +1,5 @@
 #include "../hpp/order.hpp"
+#include "../hpp/exceptions.hpp"
 
 #include <iostream>
 
@@ -64,26 +65,21 @@ namespace logistics
 		}
 	}
 
-	bool Order::AssignDriver(const std::shared_ptr<Driver>& driver)
+	void Order::AssignDriver(const std::shared_ptr<Driver>& driver)
 	{
 		if (!driver)
 		{
-			std::cout << "[Order] отказ: передан пустой указатель на водителя\n";
-			return false;
+			throw std::invalid_argument{ "передан пустой указатель на водителя" };
 		}
 
 		if (driver->GetState() == Driver::State::eResting)
 		{
-			std::cout << "[Order] отказ: водитель '" << driver->GetFullName()
-					<< "' отдыхает, нельзя назначить на заказ id=" << m_id << "\n";
-			return false;
+			throw DriverUnavailable{ driver->GetFullName() };
 		}
 
 		if (driver->GetState() == Driver::State::eOnTrip)
 		{
-			std::cout << "[Order] отказ: водитель '" << driver->GetFullName()
-					<< "' уже занят другим заказом\n";
-			return false;
+			throw DriverUnavailable{ driver->GetFullName() };
 		}
 
 		if (auto old = m_driver.lock())
@@ -100,23 +96,18 @@ namespace logistics
 
 		std::cout << "[Order] заказ id=" << m_id
 				<< " назначен на водителя '" << driver->GetFullName() << "'\n";
-		return true;
 	}
 
-	bool Order::Cancel() 
+	void Order::Cancel() 
 	{
 		if (m_state == State::eDelivered)
 		{
-			std::cout << "[Order] отказ: заказ id=" << m_id
-					<< " уже доставлен, нельзя отменить\n";
-			return false;
+			throw InvalidOrderState{ "заказ id=" + std::to_string(m_id) + " уже доставлен, нельзя отменить\n" };
 		}
 
 		if (m_state == State::eCancelled)
 		{
-			std::cout << "[Order] отказ: заказ id=" << m_id
-					<< " уже отменён\n";
-			return false;
+			throw InvalidOrderState{ "заказ id=" + std::to_string(m_id) + " уже отменён\n" };
 		}
 	
 		if (auto driver = m_driver.lock())
@@ -133,33 +124,26 @@ namespace logistics
 
 		m_driver.reset();
 		m_state = State::eCancelled;
-		return true;
 	}
 
-	bool Order::StartTransit()
+	void Order::StartTransit()
 	{
 		auto driver = m_driver.lock();
 
 		if (!driver || m_state != State::eAssigned)
 		{
-			std::cout << "[Order] отказ: заказ id=" << m_id
-					<< " не может перейти 'в пути' без назначенного водителя\n";
-			return false;
-		}
+			throw InvalidOrderState{ "заказ id=" + std::to_string(m_id) + " не может перейти 'в пути' без назначенного водителя\n" };
+		};
 
 		m_state = State::eInTransist;
 		std::cout << "[Order] заказ id=" << m_id << " в пути\n";
-		
-		return true;
 	}
 
-	bool Order::Deliver()
+	void Order::Deliver()
 	{
 		if (m_state != State::eInTransist)
 		{
-			std::cout << "[Order] отказ: заказ id=" << m_id
-					<< " не в пути, нельзя доставить\n";
-			return false;
+			throw InvalidOrderState{ "заказ id=" + std::to_string(m_id) + " не в пути, нельзя доставить\n" };
 		}
 
 		m_state = State::eDelivered;
@@ -173,7 +157,5 @@ namespace logistics
 		}
 
 		m_driver.reset();
-
-		return true;
 	}
 }

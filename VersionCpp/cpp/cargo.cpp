@@ -1,4 +1,5 @@
 #include "../hpp/cargo.hpp"
+#include "../hpp/exceptions.hpp"
 
 #include <iostream>
 
@@ -26,10 +27,8 @@ namespace logistics
 	{
 		if (weightKg < 0.0)
 		{
-			std::cout << "[Cargo] ошибка: вес не может быть отрицательным\n";
-			return;
+			throw NegativeWeight{ weightKg };
 		}
 		m_weightKg = weightKg;
 	}
-
 }

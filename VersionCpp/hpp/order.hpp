@@ -71,13 +71,13 @@ namespace logistics
 
 		void ReleaseDriver();
 
-		bool Cancel();
+		void Cancel();
 
-		bool AssignDriver(const std::shared_ptr<Driver>&driver);
+		void AssignDriver(const std::shared_ptr<Driver>&driver);
 
-		bool StartTransit();
+		void StartTransit();
 
-		bool Deliver();
+		void Deliver();
 
 	private:
 		[[nodiscard]] static std::string_view StateToStr(State state);

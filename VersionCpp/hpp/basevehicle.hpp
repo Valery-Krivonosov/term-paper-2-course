@@ -42,7 +42,7 @@ namespace logistics
 		BaseVehicle(BaseVehicle&& other) noexcept;
 		BaseVehicle& operator=(BaseVehicle&& other) noexcept;
 
-		virtual ~BaseVehicle();
+		virtual ~BaseVehicle() noexcept;
 
 		[[nodiscard]] virtual std::string GetType() const = 0;
 
@@ -51,6 +51,11 @@ namespace logistics
 		virtual std::string Describe() const;
 
 		virtual std::unique_ptr<BaseVehicle> Clone() const = 0;
+
+		[[nodiscard]] std::string GetKind() const
+		{
+			return "единица транспорта";
+		}
 
 		[[nodiscard]] State GetState() const
 		{

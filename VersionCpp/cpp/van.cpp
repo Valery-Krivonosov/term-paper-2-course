@@ -1,4 +1,6 @@
 #include "../hpp/van.hpp"
+#include "../hpp/cargo.hpp"
+#include "../hpp/exceptions.hpp"
 
 #include <iostream>
 
@@ -80,5 +82,31 @@ namespace logistics
     std::unique_ptr<BaseVehicle> Van::Clone() const
     {
         return std::make_unique<Van>(*this);
+    }
+
+
+    bool Van::CanTake(const Cargo& cargo) const
+    {
+        return GetState() == State::eAvailable && cargo.GetWeightKg() <= GetCapacity() * 1000.0;
+    }
+
+    void Van::AssignTo(std::uint64_t orderId)
+    {
+        if (GetState() != State::eAvailable)
+        {
+            throw NoAvailableVehicle{ "фургон id=" + std::to_string(GetId()) + " занят" };
+        }
+        SetState(State::eOnTrip);
+        std::cout << "[Van] id=" << GetId() << " назначен на заказ id=" << orderId << "\n";
+    }
+
+    void Van::CompleteTrip() noexcept
+    {
+        SetState(State::eAvailable);
+    }
+
+    bool Van::IsAvailable() const
+    {
+        return GetState() == State::eAvailable;
     }
 }
