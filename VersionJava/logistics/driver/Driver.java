@@ -1,3 +1,8 @@
+package logistics.driver;
+
+import logistics.exception.DriverUnavailableException;
+
+
 public class Driver {
     public enum State {
         AVAILABLE,
@@ -36,9 +41,7 @@ public class Driver {
 
     public void goToRest() {
         if (state == State.ON_TRIP) {
-            System.out.println("[Driver] ошибка: водитель '" + fullName +
-                    "' в рейсе, нельзя уйти на отдых");
-            return;
+            throw new DriverUnavailableException(fullName);
         }
         state = State.RESTING;
         System.out.println("[Driver] водитель '" + fullName + "' ушёл на отдых");

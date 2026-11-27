@@ -1,3 +1,11 @@
+package logistics.order;
+
+import logistics.cargo.Cargo;
+import logistics.driver.Driver;
+import logistics.exception.DriverUnavailableException;
+import logistics.exception.InvalidOrderStateException;
+
+
 public class Order {
     public enum State {
         CREATED,
@@ -50,22 +58,17 @@ public class Order {
         };
     }
 
-    public boolean assignDriver(Driver driver) {
+    public void assignDriver(Driver driver) {
         if (driver == null) {
-            System.out.println("[Order] отказ: водителя нет");
-            return false;
+            throw new IllegalArgumentException("передан пустой водитель");
         }
 
         if (driver.getState() == Driver.State.ON_TRIP) {
-            System.out.println("[Order] отказ: водитель '" + driver.getFullName() +
-                        "' уже занят другим заказом");
-            return false;
+            throw new DriverUnavailableException(driver.getFullName());
         }
 
         if (driver.getState() == Driver.State.RESTING) {
-            System.out.println("[Order] отказ: водитель '" + driver.getFullName() +
-                        "' отдыхает, нельзя назначить на заказ id=" + id);
-            return false;
+            throw new DriverUnavailableException(driver.getFullName());
         }
 
         if (this.driver != null && this.driver != driver) {
@@ -78,7 +81,6 @@ public class Order {
 
        System.out.println("[Order] заказ id=" + id +
                     " назначен на водителя '" + driver.getFullName() + "'");
-        return true;
     }
 
     public void releaseDriver() {
@@ -96,24 +98,22 @@ public class Order {
         }
     }
 
-    public boolean startTransit() {
+    public void startTransit() {
         if (driver == null || state != State.ASSIGNED) {
-            System.out.println("[Order] отказ: заказ id=" + id +
-                        " не может перейти 'в пути' без назначенного водителя");
-            return false;
+            throw new InvalidOrderStateException(
+                "заказ id=" + id + " не может перейти 'в пути' без назначенного водителя"
+            );
         }
 
         state = State.IN_TRANSIST;
         System.out.println("[Order] заказ id=" + id + " в пути");
-
-        return true;
     }
 
-    public boolean deliver() {
+    public void deliver() {
         if (state != State.IN_TRANSIST) {
-            System.out.println("[Order] отказ: заказ id=" + id +
-                        " не в пути, нельзя доставить");
-            return false;
+            throw new InvalidOrderStateException(
+                 "заказ id=" + id + " не в пути, нельзя доставить"
+            );
         }
 
         state = State.DELIVERED;
@@ -124,20 +124,17 @@ public class Order {
                         " доставлен, водитель '" + driver.getFullName() + "' освобождён");
             driver = null;
         }
-
-        return true;
     }
 
-    public boolean cancel() {
+    public void cancel() {
         if (state == State.DELIVERED) {
-            System.out.println("[Order] отказ: заказ id=" + id +
-                        " уже доставлен, нельзя отменить");
-            return false;
+            throw new InvalidOrderStateException(
+                "заказ id=" + id + " уже доставлен, нельзя отменить"
+            );    
         }
 
         if (state == State.CANCALED) {
-            System.out.println("[Order] отказ: заказ id=" + id + " уже отменён");
-            return false;
+            throw new InvalidOrderStateException("заказ id=" + id + " уже отменён");
         }
 
         if (driver != null) {
@@ -150,7 +147,6 @@ public class Order {
         }
 
         state = State.CANCALED;
-        return true;
     }
 
     @Override
